@@ -80,8 +80,7 @@ exports.getAllReservations = getAllReservations;
 //   }
 //   return Promise.resolve(limitedProperties);
 // }
-// if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
-// if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
+
 
 const getAllProperties = (options, limit = 10) => {
   // const values = [ limit ];
@@ -121,6 +120,18 @@ const getAllProperties = (options, limit = 10) => {
   if (options.maximum_price_per_night) {
     queryParams.push(`${options.maximum_price_per_night * 100}`);
     queryString += `AND cost_per_night <= $${queryParams.length} `;
+  }
+
+  // if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
+  if (options.maximum_price_per_night) {
+    queryParams.push(`${options.maximum_price_per_night * 100}`);
+    queryString += `AND cost_per_night <= $${queryParams.length} `;
+  }
+
+  // if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
+  if (options.minimum_rating) {
+    queryParams.push(`${options.minimum_rating}`);
+    queryString += `AND property_reviews.rating >= $${queryParams.length} `;
   }
 
   // 4
