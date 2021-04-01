@@ -5,4 +5,6 @@ const getAllProperties = (limit, cb) => {
     .query('SELECT * FROM properties LIMIT ' + limit + ';')
     .then(res => console.log(res.rows))
     .catch(err => console.error(err.stack))    
-};  
+};
+
+module.exports = { getAllProperties };
