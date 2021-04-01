@@ -56,7 +56,14 @@ exports.addUser = addUser;
  */
 const getAllReservations = function(guest_id, limit = 10) {
   const values = [ guest_id ];
-  const sqlQuery = 'SELECT properties.id AS id, title AS title, cost_per_night, reservations.start_date, AVG(property_reviews.rating) AS average_rating FROM reservations, properties JOIN property_reviews ON property_reviews.property_id = properties.id WHERE reservations.guest_id = $1 AND start_date < Now()::date GROUP BY properties.id, reservations.start_date ORDER BY start_date DESC LIMIT 10;';
+  let sqlQuery = 'SELECT properties.id AS id, title AS title, cost_per_night, reservations.start_date, AVG(property_reviews.rating) AS average_rating ';
+  sqlQuery += 'FROM reservations, properties ';
+  sqlQuery += 'JOIN property_reviews ON property_reviews.property_id = properties.id ';
+  sqlQuery += 'WHERE reservations.guest_id = $1 ';
+  sqlQuery += 'AND start_date < Now()::date ';
+  sqlQuery += 'GROUP BY properties.id, reservations.start_date ';
+  sqlQuery += 'ORDER BY start_date DESC LIMIT 10;';
+  
   return client
     .query(sqlQuery, values)
     .then(res => res.rows )
@@ -73,8 +80,6 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-
-
 const getAllProperties = (options, limit = 10) => {
   // 1
   const queryParams = [];
