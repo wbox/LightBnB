@@ -80,13 +80,57 @@ exports.getAllReservations = getAllReservations;
 //   }
 //   return Promise.resolve(limitedProperties);
 // }
+// if an owner_id is passed in, only return properties belonging to that owner.
+// if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
+// if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
 
 const getAllProperties = (options, limit = 10) => {
-  const values = [ limit ];
-  return client
-    .query('SELECT * FROM properties LIMIT $1', values)
-    .then(res => res.rows)
-    .catch(err => err.stack)    
+  // const values = [ limit ];
+  // return client
+  //   .query('SELECT * FROM properties LIMIT $1', values)
+  //   .then(res => res.rows)
+  //   .catch(err => err.stack)
+  // 1
+  const queryParams = [];
+  // 2
+  let queryString = `
+  SELECT properties.*, avg(property_reviews.rating) as average_rating
+  FROM properties
+  JOIN property_reviews ON properties.id = property_id
+  `;
+
+
+
+  // 3
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    queryString += `WHERE city LIKE $${queryParams.length} `;
+  }
+
+  // if an owner_id is passed in, only return properties belonging to that owner.
+  if (options.owner_id) {
+    queryParams.push(`${options.owner_id}`);
+    queryString += `AND owner_id = $${queryParams.length} `;
+  }
+
+  
+
+  // 4
+  queryParams.push(limit);
+  queryString += `
+  GROUP BY properties.id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+
+  // 5
+  console.log("queryString: ", queryString);
+  console.log("queryParams: ", queryParams);
+
+  // 6
+  return client.query(queryString, queryParams)
+  .then(res => res.rows);
+    
 };
 exports.getAllProperties = getAllProperties;
 
