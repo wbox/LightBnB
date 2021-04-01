@@ -80,7 +80,6 @@ exports.getAllReservations = getAllReservations;
 //   }
 //   return Promise.resolve(limitedProperties);
 // }
-// if an owner_id is passed in, only return properties belonging to that owner.
 // if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
 // if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
 
@@ -113,7 +112,16 @@ const getAllProperties = (options, limit = 10) => {
     queryString += `AND owner_id = $${queryParams.length} `;
   }
 
-  
+  // if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
+  if (options.minimum_price_per_night) {
+    queryParams.push(`${options.minimum_price_per_night * 100}`);
+    queryString += `AND cost_per_night >= $${queryParams.length} `;
+  }
+
+  if (options.maximum_price_per_night) {
+    queryParams.push(`${options.maximum_price_per_night * 100}`);
+    queryString += `AND cost_per_night <= $${queryParams.length} `;
+  }
 
   // 4
   queryParams.push(limit);
