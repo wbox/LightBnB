@@ -11,9 +11,9 @@ const { client } = require('./db/connection');
  */
 const getUserWithEmail = function(email) {
   const values = [ email ];
-  client
+  return client
     .query('SELECT * FROM users WHERE email = $1', values)
-    .then(res => res.rows[0] )
+    .then(res => res ? res.rows[0] : null )
     .catch(err => console.error(err.message))
 }
 exports.getUserWithEmail = getUserWithEmail;
@@ -27,7 +27,7 @@ const getUserWithId = function(id) {
   const values = [ id ];
   return client
     .query('SELECT * FROM users WHERE id = $1', values)
-    .then(res => res ? res.rows[0] : null)
+    .then(res => res ? res.rows : null)
     .catch(err => console.error('User not found'))
 }
 exports.getUserWithId = getUserWithId;
@@ -55,8 +55,14 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
-}
+  const values = [ guest_id ];
+  const sqlQuery = 'SELECT properties.id AS id, title AS title, cost_per_night, reservations.start_date, AVG(property_reviews.rating) AS average_rating FROM reservations, properties JOIN property_reviews ON property_reviews.property_id = properties.id WHERE reservations.guest_id = $1 AND start_date < Now()::date GROUP BY properties.id, reservations.start_date ORDER BY start_date DESC LIMIT 10;';
+  return client
+    .query(sqlQuery, values)
+    .then(res => res.rows )
+    .catch(err => console.error(err.message) )
+}  
+
 exports.getAllReservations = getAllReservations;
 
 /// Properties
