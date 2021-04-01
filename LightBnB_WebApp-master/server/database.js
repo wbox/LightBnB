@@ -27,7 +27,7 @@ const getUserWithId = function(id) {
   const values = [ id ];
   return client
     .query('SELECT * FROM users WHERE id = $1', values)
-    .then(res => res ? res.rows : null)
+    .then(res => res ? res.rows[0] : null)
     .catch(err => console.error('User not found'))
 }
 exports.getUserWithId = getUserWithId;
@@ -64,12 +64,11 @@ const getAllReservations = function(guest_id, limit = 10) {
   sqlQuery += 'GROUP BY properties.id, reservations.start_date ';
   sqlQuery += 'ORDER BY start_date DESC LIMIT 10;';
 
-  return client.query
+  return client
     .query(sqlQuery, values)
     .then(res => res.rows )
     .catch(err => console.error(err.message) )
 }  
-
 exports.getAllReservations = getAllReservations;
 
 /// Properties
@@ -81,16 +80,18 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = (options, limit = 10) => {
-  // 1
+  // Setup an array to hold any parameters that may be available for the query.
   const queryParams = [];
-  // 2
+  // Start the query with all information that comes before the WHERE clause.
   let queryString = `
   SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
   LEFT JOIN property_reviews ON properties.id = property_id
   `;
 
-  // 3
+  // Check if a city has been passed in as an option. Add the city to the params array and create a WHERE clause for the city.
+  // We can use the length of the array to dynamically get the $n placeholder number. Since this is the first parameter, it will be $1.
+  // The % syntax for the LIKE clause must be part of the parameter, not the query.
   if (options.city) {
     queryParams.push(`%${options.city}%`);
     queryString += `WHERE city LIKE $${queryParams.length} `;
@@ -126,7 +127,7 @@ const getAllProperties = (options, limit = 10) => {
     queryString += `AND property_reviews.rating >= $${queryParams.length} `;
   }
 
-  // 4
+  // Add any query that comes after the WHERE clause.
   queryParams.push(limit);
   queryString += `
   GROUP BY properties.id
@@ -134,11 +135,7 @@ const getAllProperties = (options, limit = 10) => {
   LIMIT $${queryParams.length};
   `;
 
-  // 5
-  console.log("queryString: ", queryString);
-  console.log("queryParams: ", queryParams);
-
-  // 6
+  // Run the query
   return client
     .query(queryString, queryParams)
     .then(res => res.rows)
