@@ -77,10 +77,10 @@ exports.getAllReservations = getAllReservations;
 
 const getAllProperties = (options, limit = 10) => {
   const values = [ limit ];
-  client
+  return client
     .query('SELECT * FROM properties LIMIT $1', values)
-    .then(res => console.log(res.rows))
-    .catch(err => console.error(err.stack))    
+    .then(res => res.rows)
+    .catch(err => err.stack)    
 };
 exports.getAllProperties = getAllProperties;
 
