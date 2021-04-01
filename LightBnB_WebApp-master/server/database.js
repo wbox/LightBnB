@@ -73,21 +73,9 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-// const getAllProperties = function(options, limit = 10) {
-//   const limitedProperties = {};
-//   for (let i = 1; i <= limit; i++) {
-//     limitedProperties[i] = properties[i];
-//   }
-//   return Promise.resolve(limitedProperties);
-// }
 
 
 const getAllProperties = (options, limit = 10) => {
-  // const values = [ limit ];
-  // return client
-  //   .query('SELECT * FROM properties LIMIT $1', values)
-  //   .then(res => res.rows)
-  //   .catch(err => err.stack)
   // 1
   const queryParams = [];
   // 2
@@ -96,8 +84,6 @@ const getAllProperties = (options, limit = 10) => {
   FROM properties
   JOIN property_reviews ON properties.id = property_id
   `;
-
-
 
   // 3
   if (options.city) {
@@ -111,12 +97,13 @@ const getAllProperties = (options, limit = 10) => {
     queryString += `AND owner_id = $${queryParams.length} `;
   }
 
-  // if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
+  // if a minimum_price_per_night, only return properties within that price range.
   if (options.minimum_price_per_night) {
     queryParams.push(`${options.minimum_price_per_night * 100}`);
     queryString += `AND cost_per_night >= $${queryParams.length} `;
   }
-
+  
+  // if a maximum_price_per_night, only return properties within that price range.
   if (options.maximum_price_per_night) {
     queryParams.push(`${options.maximum_price_per_night * 100}`);
     queryString += `AND cost_per_night <= $${queryParams.length} `;
@@ -143,8 +130,8 @@ const getAllProperties = (options, limit = 10) => {
   `;
 
   // 5
-  console.log("queryString: ", queryString);
-  console.log("queryParams: ", queryParams);
+  // console.log("queryString: ", queryString);
+  // console.log("queryParams: ", queryParams);
 
   // 6
   return client.query(queryString, queryParams)
