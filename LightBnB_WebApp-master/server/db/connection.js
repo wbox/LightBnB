@@ -1,3 +1,4 @@
+const e = require('express');
 const pg = require('pg');
 
 const Client = pg.Client;
@@ -11,6 +12,7 @@ const configDb ={
 };
 
 const client = new Client(configDb);
-client.connect();
+client.connect()
+  .catch(e => console.error(e));
 
 module.exports = { client };
