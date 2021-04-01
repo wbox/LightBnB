@@ -63,8 +63,8 @@ const getAllReservations = function(guest_id, limit = 10) {
   sqlQuery += 'AND start_date < Now()::date ';
   sqlQuery += 'GROUP BY properties.id, reservations.start_date ';
   sqlQuery += 'ORDER BY start_date DESC LIMIT 10;';
-  
-  return client
+
+  return client.query
     .query(sqlQuery, values)
     .then(res => res.rows )
     .catch(err => console.error(err.message) )
@@ -87,7 +87,7 @@ const getAllProperties = (options, limit = 10) => {
   let queryString = `
   SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
-  JOIN property_reviews ON properties.id = property_id
+  LEFT JOIN property_reviews ON properties.id = property_id
   `;
 
   // 3
@@ -135,12 +135,14 @@ const getAllProperties = (options, limit = 10) => {
   `;
 
   // 5
-  // console.log("queryString: ", queryString);
-  // console.log("queryParams: ", queryParams);
+  console.log("queryString: ", queryString);
+  console.log("queryParams: ", queryParams);
 
   // 6
-  return client.query(queryString, queryParams)
-  .then(res => res.rows);
+  return client
+    .query(queryString, queryParams)
+    .then(res => res.rows)
+    .catch(err => console.error(err.message))
     
 };
 exports.getAllProperties = getAllProperties;
@@ -152,9 +154,18 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+
+  // Normalize the cost per night
+  property.cost_per_night *= 100;
+  const values = Object.values(property);
+
+  let sqlQuery = 'INSERT INTO properties (title, description, number_of_bathrooms, number_of_bedrooms, parking_spaces, cost_per_night, '
+  sqlQuery += 'thumbnail_photo_url, cover_photo_url, street, country, city, province, post_code, owner_id) ';
+  sqlQuery += 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *;';
+
+  return client
+    .query(sqlQuery, values)
+    .then(res => res.rows)
+    .catch(err => console.error(err.message))
 }
 exports.addProperty = addProperty;
